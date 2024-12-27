@@ -1,5 +1,9 @@
 {
     "version": 2,
+    "env": {
+        "SUPABASE_URL": "@supabase-url",
+        "SUPABASE_ANON_KEY": "@supabase-anon-key"
+      },
     "builds": [
       {
         "src": "index.js",
@@ -13,3 +17,4 @@
       }
     ]
   }
+
