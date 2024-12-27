@@ -23,7 +23,7 @@ app.use(express.static('public'));
 
 
 app.use(cors({
-    origin: ['https://wowdrone.webflow.io', 'http://localhost:3000', 'https://server-pre-deploy.vercel.app'],
+    origin: ['https://wowdrone.webflow.io', 'http://localhost:3000', 'https://server-pre-deploy-ehss0ydsr-blahiis-projects.vercel.app/'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
