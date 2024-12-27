@@ -1,8 +1,8 @@
 {
     "version": 2,
     "env": {
-      "SUPABASE_URL": "https://ilmzlrbcjzyjxxboflky.supabase.co",
-      "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsbXpscmJjanp5anh4Ym9mbGt5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzUxNjA1MDIsImV4cCI6MjA1MDczNjUwMn0.alDOEMaI4TBtEMd4f8fnbxwIQ31JsAOgiorpl-57uNA"
+    "SUPABASE_URL": "@SUPABASE_URL",
+    "SUPABASE_ANON_KEY": "@SUPABASE_ANON_KEY"
     },
     "builds": [
       {
