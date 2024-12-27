@@ -47,7 +47,7 @@ app.use((err, req, res, next) => {
     body: req.body
   });
 
-  res.status(200).json({
+  res.status(500).json({
     success: false,
     message: 'Internal server error',
     error: process.env.NODE_ENV === 'development' ? err.message : undefined
@@ -70,7 +70,7 @@ app.post('/api/register', async (req, res) => {
     });
 
     if (!req.body) {
-      return res.status(200).json({
+      return res.status(400).json({
         success: false,
         message: 'Request body is missing'
       });
@@ -78,7 +78,7 @@ app.post('/api/register', async (req, res) => {
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email || !emailRegex.test(email)) {
-      return res.status(200).json({
+      return res.status(400).json({
         success: false,
         message: 'Invalid email format',
         field: 'email',
@@ -101,7 +101,7 @@ app.post('/api/register', async (req, res) => {
         details: authError.details
       });
 
-      return res.status(200).json({
+      return res.status(400).json({
         success: false,
         message: authError.message,
         code: authError.code
@@ -129,7 +129,7 @@ app.post('/api/register', async (req, res) => {
 
       await supabase.auth.admin.deleteUser(authData.user.id);
 
-      return res.status(200).json({
+      return res.status(400).json({
         success: false,
         message: 'Failed to create user profile',
         error: process.env.NODE_ENV === 'development' ? dbError.message : undefined
@@ -211,7 +211,62 @@ supabase.auth.onAuthStateChange((event, session) => {
   }, 0);
 });
 
-// Error handling for uncaught errors
+
+// API-роут для обработки данных формы
+app.post('/api/animation-service', async (req, res) => {
+    try {
+      const {
+        numDrones,
+        serviceCategory,
+        serviceName,
+        drones,
+        coverImages,
+        speedUp,
+        basicPrepTime,
+        fastPrepTime,
+        basicPrice,
+        fastPrice,
+        fileUploads,
+        fileFormat,
+        included,
+        maxShapes,
+        numEdits
+      } = req.body;
+  
+      // Сохранение данных в Supabase
+      const { data, error } = await supabase
+        .from('animation_services')
+        .insert([{
+          num_drones: numDrones,
+          service_category: serviceCategory,
+          service_name: serviceName,
+          drones: drones,
+          cover_images: coverImages,  // Ссылка на загруженное изображение
+          speed_up: speedUp,
+          basic_prep_time: basicPrepTime,
+          fast_prep_time: fastPrepTime,
+          basic_price: basicPrice,
+          fast_price: fastPrice,
+          file_uploads: fileUploads,  // Ссылки на загруженные файлы
+          file_format: fileFormat,
+          included: included,
+          max_shapes: maxShapes,
+          num_edits: numEdits,
+          created_at: new Date().toISOString()
+        }]);
+  
+      if (error) {
+        return res.status(500).json({ success: false, message: 'Error saving data', error });
+      }
+  
+      res.status(200).json({ success: true, message: 'Form submitted successfully!', data });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ success: false, message: 'Server error', error });
+    }
+  });
+  
+// Global error handler for uncaught errors
 app.use((err, req, res, next) => {
   console.error('Global error handler:', err);
   res.status(500).json({
