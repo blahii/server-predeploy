@@ -54,6 +54,9 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Utility function to validate UUID format
+const isValidUUID = (id) => /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id);
+
 // Registration route
 app.post('/api/register', async (req, res) => {
   try {
@@ -108,7 +111,7 @@ app.post('/api/register', async (req, res) => {
     const { error: dbError } = await supabase
       .from('users')
       .insert([{
-        id: authData.user.id,
+        id: authData.user.id,  // Ensure authData.user.id is UUID
         name,
         email: email.toLowerCase().trim(),
         industry,
@@ -159,6 +162,26 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Get user by UUID
+app.get('/api/users/:id', async (req, res) => {
+  const { id } = req.params;
+
+  if (!isValidUUID(id)) {
+    return res.status(400).json({ success: false, message: 'Invalid UUID' });
+  }
+
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', id);  // Use UUID for comparison
+
+  if (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+
+  res.status(200).json({ success: true, data });
+});
+
 // Listen for authentication events
 supabase.auth.onAuthStateChange((event, session) => {
   setTimeout(async () => {
@@ -185,7 +208,6 @@ supabase.auth.onAuthStateChange((event, session) => {
       // Logic for handling user updates
     }
 
-    // Avoid calling async functions inside the callback directly
   }, 0);
 });
 
