@@ -1,11 +1,11 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import morgan from 'morgan';
+import morgan from 'morgan'
 import { createClient } from '@supabase/supabase-js';
 import bodyParser from 'body-parser';
 import bcrypt from 'bcrypt';
-import Joi from 'joi'; // Add Joi for request validation
+import Joi from 'joi';
 
 dotenv.config();
 const app = express();
@@ -13,16 +13,15 @@ const PORT = process.env.PORT || 3000;
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
-
-// Use Morgan for logs
+// using morgan for logs
 app.use(morgan('combined'));
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
-// CORS configuration
+
 app.use(cors({
     origin: ['https://wowdrone.webflow.io', 'http://localhost:3000', 'https://server-pre-deploy.vercel.app'],
     credentials: true,
@@ -30,7 +29,12 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Error handling middleware
+app.use((req, res, next) => {
+    res.setHeader('ngrok-skip-browser-warning', 'true');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, ngrok-skip-browser-warning');
+    next();
+});
+
 app.use((err, req, res, next) => {
     console.error('Global error handler:', {
         error: err.message,
@@ -40,14 +44,13 @@ app.use((err, req, res, next) => {
         body: req.body
     });
     
-    res.status(500).json({
+    res.status(200).json({
         success: false,
         message: 'Internal server error',
         error: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
 });
 
-// Register route
 app.post('/api/register', async (req, res) => {
     try {
         const { name, email, password, industry, country, phone } = req.body;
@@ -60,21 +63,22 @@ app.post('/api/register', async (req, res) => {
             body: { ...req.body, password: '[REDACTED]' }
         });
 
-        // Validate request body
-        const schema = Joi.object({
-            name: Joi.string().required(),
-            email: Joi.string().email().required(),
-            password: Joi.string().min(6).required(),
-            industry: Joi.string().optional(),
-            country: Joi.string().optional(),
-            phone: Joi.string().optional()
-        });
-
-        const { error } = schema.validate(req.body);
-        if (error) {
-            return res.status(400).json({
+        // Validate request body exists
+        if (!req.body) {
+            return res.status(200).json({
                 success: false,
-                message: error.details[0].message,
+                message: 'Request body is missing'
+            });
+        }
+
+        // Email validation with detailed error
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email || !emailRegex.test(email)) {
+            return res.status(200).json({
+                success: false,
+                message: 'Invalid email format',
+                field: 'email',
+                receivedValue: email
             });
         }
 
@@ -94,7 +98,7 @@ app.post('/api/register', async (req, res) => {
                 details: authError.details
             });
 
-            return res.status(400).json({
+            return res.status(200).json({
                 success: false,
                 message: authError.message,
                 code: authError.code
@@ -124,7 +128,7 @@ app.post('/api/register', async (req, res) => {
             // Cleanup on database error
             await supabase.auth.admin.deleteUser(authData.user.id);
             
-            return res.status(500).json({
+            return res.status(200).json({
                 success: false,
                 message: 'Failed to create user profile',
                 error: process.env.NODE_ENV === 'development' ? dbError.message : undefined
@@ -152,7 +156,6 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
-// Health route
 app.get('/api/health', (req, res) => {
     res.status(200).json({
         status: 'ok',
@@ -160,7 +163,6 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// Start the server
 app.listen(PORT, () => {
     console.log(`Сервер запущен на http://localhost:${PORT}`);
 });
